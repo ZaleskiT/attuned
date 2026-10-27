@@ -1,0 +1,15 @@
+.genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.selected {
+  background: grey;
+  color: white;
+}
+
+.error {
+  color: red;
+}

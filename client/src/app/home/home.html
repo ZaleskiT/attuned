@@ -3,9 +3,9 @@
 @if (loading()) {
   <p>Loading genres...</p>
 } @else if (errorMessage()) {
-  <p>{{ errorMessage() }}</p>
+  <p class="error">{{ errorMessage() }}</p>
 } @else {
-  <div>
+  <div class="genres">
     @for (genre of genres(); track genre.id) {
       <button
         type="button"
