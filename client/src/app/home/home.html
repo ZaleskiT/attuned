@@ -1,0 +1,23 @@
+<h2>Pick a genre</h2>
+
+@if (loading()) {
+  <p>Loading genres...</p>
+} @else if (errorMessage()) {
+  <p>{{ errorMessage() }}</p>
+} @else {
+  <div>
+    @for (genre of genres(); track genre.id) {
+      <button
+        type="button"
+        [class.selected]="genre.id === selectedGenreId()"
+        (click)="selectGenre(genre.id)"
+      >
+        {{ genre.name }}
+      </button>
+    }
+  </div>
+
+  <button type="button" [disabled]="selectedGenreId() === null" (click)="start()">
+    Start
+  </button>
+}
