@@ -2,6 +2,11 @@ import express from 'express';
 
 const app = express();
 const PORT = 3000;
+// Starting with 10, maybe user defined later
+const TOTAL_ROUNDS = 10;
+const games = new Map();
+
+app.use(express.json());
 
 // Genres; ids match Deezer's category ids
 const GENRES = [
@@ -72,11 +77,36 @@ async function fetchTracks(genreId) {
   }));
 }
 
+// https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+// Stack Overflow in 2026!
+function shuffle(array) {
+  const copy = [...array];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+// The best quick solution. Song variants and re-releases aren't covered.
+function removeDuplicates(tracks) {
+  const seen = new Set();
+  return tracks.filter((track) => {
+    const key = `${track.titleShort.toLowerCase()}|${track.artist.toLowerCase()}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Attuned express server is up and running!' });
 });
 
+// Static list of acceptable genres
 app.get('/api/genres', (req, res) => {
   res.json(GENRES);
 });
@@ -102,6 +132,44 @@ app.get('/api/genres/:id/tracks', async (req, res) => {
     console.error('Couldn\'t load tracks: ', err.message);
     res.status(400).json({ error: 'Could not load songs from Deezer' });
   }
+});
+
+app.post('/api/games', async (req, res) => {
+  const genreId = req.body?.genreId;
+  let tracks;
+
+    // Check if id is a number
+  if (!Number.isInteger(genreId)) {
+    return res.status(400).json({ error: 'genreId must be a number' });
+  }
+
+  if (!GENRES.some((g) => g.id === genreId)) {
+    return res.status(404).json({ error: 'genreId must belong to known genre' });
+  }
+
+  try {
+    tracks = removeDuplicates(await fetchTracks(genreId));
+  } catch (err) {
+    return res.status(400).json({ error: 'Could not load songs from Deezer' });
+  }
+
+  // Need enough tracks to play the game
+  if (tracks.length < TOTAL_ROUNDS) {
+    return res.status(400).json({ error: 'Not enough playable songs for this genre selection' });
+  }
+
+  const game = {
+    id: crypto.randomUUID(),
+    genreId,
+    tracks,
+    songs: shuffle(tracks).slice(0, TOTAL_ROUNDS),
+    currentRound: 1,
+    score: 0,
+  };
+
+  games.set(game.id, game);
+
+  res.status(201).json({ gameId: game.id, totalRounds: TOTAL_ROUNDS });
 });
 
 app.listen(PORT, () => {
