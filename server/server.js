@@ -101,6 +101,26 @@ function removeDuplicates(tracks) {
   });
 }
 
+// For the 4 choice game mode, this creates the set of 1 correct and 3 incorrect options
+function buildChoices(song, tracks) {
+  const used = new Set([song.titleShort.toLowerCase()]);
+  const wrongTitles = [];
+
+  for (const track of shuffle(tracks)) {
+    const key = track.titleShort.toLowerCase();
+    if (!used.has(key)) {
+      used.add(key);
+      wrongTitles.push(track.titleShort);
+    }
+    // Might make this variable later, but will stick with 4 answers for now.
+    if (wrongTitles.length === 3) {
+      break;
+    }
+  }
+
+  return shuffle([song.titleShort, ...wrongTitles]);
+}
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Attuned express server is up and running!' });
@@ -159,11 +179,13 @@ app.post('/api/games', async (req, res) => {
     return res.status(400).json({ error: 'Not enough playable songs for this genre selection' });
   }
 
+  const songs = shuffle(tracks).slice(0, TOTAL_ROUNDS);
+
   const game = {
     id: crypto.randomUUID(),
     genreId,
-    tracks,
-    songs: shuffle(tracks).slice(0, TOTAL_ROUNDS),
+    songs,
+    choices: songs.map((song) => buildChoices(song, tracks)),
     currentRound: 1,
     score: 0,
   };
@@ -171,6 +193,23 @@ app.post('/api/games', async (req, res) => {
   games.set(game.id, game);
 
   res.status(201).json({ gameId: game.id, totalRounds: TOTAL_ROUNDS });
+});
+
+
+app.get('/api/games/:id/round', (req, res) => {
+  const game = games.get(req.params.id);
+
+  if (!game) {
+    return res.status(404).json({ error: 'Game not found' });
+  }
+  const index = game.currentRound - 1;
+  
+  res.json({
+    roundNumber: game.currentRound,
+    totalRounds: TOTAL_ROUNDS,
+    preview: game.songs[index].preview,
+    choices: game.choices[index],
+  });
 });
 
 app.listen(PORT, () => {
