@@ -150,6 +150,7 @@ app.post('/api/games', async (req, res) => {
   try {
     tracks = removeDuplicates(await fetchTracks(genreId));
   } catch (err) {
+    console.error('Couldn\'t create game: ', err.message);
     return res.status(400).json({ error: 'Could not load songs from Deezer' });
   }
 
