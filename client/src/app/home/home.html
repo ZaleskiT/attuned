@@ -17,7 +17,15 @@
     }
   </div>
 
-  <button type="button" [disabled]="selectedGenreId() === null" (click)="start()">
-    Start
+  <button type="button" [disabled]="selectedGenreId() === null || starting()" (click)="start()">
+    @if (starting()) {
+      Loading..
+    } @else {
+      Start
+    }
   </button>
+
+  @if (startError()) {
+    <p class="error">{{ startError() }}</p>
+  }
 }
