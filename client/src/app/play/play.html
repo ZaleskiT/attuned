@@ -1,3 +1,17 @@
-<h2>Play</h2>
-<p>Game id: {{ id() }}</p>
-<p>Play placeholder. Id should display above.</p>
+@if (errorMessage()) {
+  <p class="error">{{ errorMessage() }}</p>
+} @else if (round(); as round) {
+  <h2>Round {{ round.roundNumber }} / {{ round.totalRounds }}</h2>
+
+  @if (needsClick()) {
+    <button type="button" (click)="playAudio()">Play song</button>
+  }
+
+  <div class="choices">
+    @for (choice of round.choices; track choice) {
+      <button type="button">{{ choice }}</button>
+    }
+  </div>
+} @else {
+  <p>Loading round...</p>
+}
