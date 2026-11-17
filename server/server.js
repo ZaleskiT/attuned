@@ -214,7 +214,43 @@ app.get('/api/games/:id/round', (req, res) => {
 });
 
 app.post('/api/games/:id/guess', (req, res) => {
-  return res.status(400).json({ error: 'Working on it' });
+  const game = games.get(req.params.id);
+
+  if (!game) {
+    return res.status(404).json({ error: 'Game not exist' });
+  }
+
+  const roundNumber = req.body?.roundNumber;
+  const choice = req.body?.choice;
+  const index = game.currentRound - 1;
+
+  // Validate request body
+  if (roundNumber !== game.currentRound) {
+    return res.status(400).json({ error: 'Wrong round number' });
+  }
+
+  if (!game.choices[index].includes(choice)) {
+    return res.status(400).json({ error: 'Choice must be one of the options' });
+  }
+
+  // Correct song for the round
+  const song = game.songs[index];
+
+  // Compare to submitted song
+  const correct = choice === song.titleShort;
+
+  game.answers[index] = { choice, correct };
+
+  res.json({
+    correct,
+    song: {
+      title: song.title,
+      artist: song.artist,
+      album: song.album,
+      cover: song.cover,
+      link: song.link,
+    },
+  });
 });
 
 app.listen(PORT, () => {
