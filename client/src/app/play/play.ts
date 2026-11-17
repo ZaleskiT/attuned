@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, inject, input, signal } from '@angular/core';
-import { ApiService, Round } from '../api.service';
+import { ApiService, GuessResult, Round } from '../api.service';
 
 @Component({
   selector: 'app-play',
@@ -15,6 +15,9 @@ export class Play implements OnInit, OnDestroy {
   protected readonly round = signal<Round | null>(null);
   protected readonly errorMessage = signal('');
   protected readonly needsClick = signal(false);
+  protected readonly selectedChoice = signal<string | null>(null);
+  // Set during guess,
+  protected readonly result = signal<GuessResult | null>(null);
 
   ngOnInit() {
     this.api.getRound(this.id()).subscribe({
@@ -38,5 +41,27 @@ export class Play implements OnInit, OnDestroy {
       .play()
       .then(() => this.needsClick.set(false))
       .catch(() => this.needsClick.set(true));
+  }
+
+  guess(choice: string) {
+    const round = this.round();
+    if (!round || this.selectedChoice()) {
+      return;
+    }
+
+    this.audio.pause();
+    this.needsClick.set(false);
+
+    this.selectedChoice.set(choice);
+
+    // Send the relevant information for determining result
+    this.api.sendGuess(this.id(), round.roundNumber, choice, this.audio.currentTime).subscribe({
+      next: (result) => {
+        this.result.set(result);
+      },
+      error: () => {
+        this.errorMessage.set('Guess couldn\'t be sent.');
+      },
+    });
   }
 }

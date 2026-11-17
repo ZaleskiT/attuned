@@ -9,9 +9,35 @@
 
   <div class="choices">
     @for (choice of round.choices; track choice) {
-      <button type="button">{{ choice }}</button>
+      <button
+        type="button"
+        [class.selected]="choice === selectedChoice()"
+        [disabled]="selectedChoice() !== null"
+        (click)="guess(choice)"
+      >
+        {{ choice }}
+      </button>
     }
   </div>
+
+  
+  @if (result(); as result) {
+    <div class="reveal">
+      @if (result.correct) {
+        <h3>Correct!</h3>
+      } @else {
+        <h3>Wrong</h3>
+      }
+
+      <img [src]="result.song.cover" [alt]="result.song.album" width="200" height="200" />
+      <p>
+        <strong>{{ result.song.title }}</strong><br />
+        {{ result.song.artist }}<br />
+        {{ result.song.album }}
+      </p>
+      <a [href]="result.song.link" target="_blank" rel="noopener">Listen on Deezer</a>
+    </div>
+  }
 } @else {
   <p>Loading round...</p>
 }

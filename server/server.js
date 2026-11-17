@@ -186,6 +186,7 @@ app.post('/api/games', async (req, res) => {
     genreId,
     songs,
     choices: songs.map((song) => buildChoices(song, tracks)),
+    answers: [],
     currentRound: 1,
     score: 0,
   };
@@ -210,6 +211,10 @@ app.get('/api/games/:id/round', (req, res) => {
     preview: game.songs[index].preview,
     choices: game.choices[index],
   });
+});
+
+app.post('/api/games/:id/guess', (req, res) => {
+  return res.status(400).json({ error: 'Working on it' });
 });
 
 app.listen(PORT, () => {

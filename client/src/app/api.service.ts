@@ -19,6 +19,19 @@ export interface Round {
   choices: string[];
 }
 
+export interface Song {
+  title: string;
+  artist: string;
+  album: string;
+  cover: string;
+  link: string;
+}
+
+export interface GuessResult {
+  correct: boolean;
+  song: Song;
+}
+
 
 // The singular api service
 
@@ -36,5 +49,13 @@ export class ApiService {
 
   getRound(gameId: string): Observable<Round> {
     return this.http.get<Round>(`/api/games/${gameId}/round`);
+  }
+
+  sendGuess(gameId: string, roundNumber: number, choice: string, secondsPlayed: number): Observable<GuessResult> {
+    return this.http.post<GuessResult>(`/api/games/${gameId}/guess`, {
+      roundNumber,
+      choice,
+      secondsPlayed,
+    });
   }
 }
