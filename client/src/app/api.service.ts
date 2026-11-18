@@ -15,6 +15,7 @@ export interface NewGame {
 export interface Round {
   roundNumber: number;
   totalRounds: number;
+  score: number;
   preview: string;
   choices: string[];
 }
@@ -29,6 +30,9 @@ export interface Song {
 
 export interface GuessResult {
   correct: boolean;
+  points: number;
+  score: number;
+  secondsPlayed: number;
   song: Song;
 }
 

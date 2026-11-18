@@ -6,6 +6,15 @@ const PORT = 3000;
 const TOTAL_ROUNDS = 10;
 const games = new Map();
 
+// First pass at scoring, will tune later if needed
+const SCORE_TIERS = [
+  { maxSeconds: 2, points: 1000 },
+  { maxSeconds: 5, points: 800 },
+  { maxSeconds: 10, points: 600 },
+  { maxSeconds: 15, points: 400 },
+  { maxSeconds: 30, points: 200 },
+];
+
 app.use(express.json());
 
 // Genres; ids match Deezer's category ids
@@ -14,17 +23,8 @@ const GENRES = [
   { id: 132, name: 'Pop' },
   { id: 116, name: 'Hip Hop' },
   { id: 152, name: 'Rock' },
-  { id: 113, name: 'Dance' },
   { id: 165, name: 'R&B' },
   { id: 85, name: 'Alternative' },
-  { id: 106, name: 'Electro' },
-  { id: 197, name: 'Latin' },
-  { id: 464, name: 'Metal' },
-  { id: 169, name: 'Soul & Funk' },
-  { id: 466, name: 'Folk' },
-  { id: 129, name: 'Jazz' },
-  { id: 98, name: 'Classical' },
-  { id: 173, name: 'Film & Games' },
 ];
 
 /*
@@ -99,6 +99,10 @@ function removeDuplicates(tracks) {
     seen.add(key);
     return true;
   });
+}
+
+function pointsFor(seconds) {
+  return SCORE_TIERS.find((tier) => seconds <= tier.maxSeconds).points;
 }
 
 // For the 4 choice game mode, this creates the set of 1 correct and 3 incorrect options
@@ -187,6 +191,7 @@ app.post('/api/games', async (req, res) => {
     songs,
     choices: songs.map((song) => buildChoices(song, tracks)),
     answers: [],
+    roundStartTimes: [],
     currentRound: 1,
     score: 0,
   };
@@ -204,10 +209,16 @@ app.get('/api/games/:id/round', (req, res) => {
     return res.status(404).json({ error: 'Game not found' });
   }
   const index = game.currentRound - 1;
-  
+
+  // When the round is created, record the current time to compare to the relative answer time
+  if (!game.roundStartTimes[index]) {
+    game.roundStartTimes[index] = Date.now();
+  }
+
   res.json({
     roundNumber: game.currentRound,
     totalRounds: TOTAL_ROUNDS,
+    score: game.score,
     preview: game.songs[index].preview,
     choices: game.choices[index],
   });
@@ -233,16 +244,30 @@ app.post('/api/games/:id/guess', (req, res) => {
     return res.status(400).json({ error: 'Choice must be one of the options' });
   }
 
+  const reportedSeconds = req.body?.secondsPlayed;
+  if (typeof reportedSeconds !== 'number' || reportedSeconds < 0) {
+    return res.status(400).json({ error: 'secondsPlayed needs to be 0 or greater' });
+  }
+
+  const realSeconds = (Date.now() - game.roundStartTimes[index]) / 1000;
+  const secondsPlayed = Math.min(reportedSeconds, realSeconds);
+
   // Correct song for the round
   const song = game.songs[index];
 
   // Compare to submitted song
   const correct = choice === song.titleShort;
 
-  game.answers[index] = { choice, correct };
+  const points = correct ? pointsFor(secondsPlayed) : 0;
+
+  game.score += points;
+  game.answers[index] = { choice, correct, points, secondsPlayed };
 
   res.json({
     correct,
+    points,
+    score: game.score,
+    secondsPlayed: Math.round(secondsPlayed * 10) / 10,
     song: {
       title: song.title,
       artist: song.artist,

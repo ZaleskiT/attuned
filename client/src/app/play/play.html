@@ -2,6 +2,7 @@
   <p class="error">{{ errorMessage() }}</p>
 } @else if (round(); as round) {
   <h2>Round {{ round.roundNumber }} / {{ round.totalRounds }}</h2>
+  <p>Score: {{ score() }}</p>
 
   @if (needsClick()) {
     <button type="button" (click)="playAudio()">Play song</button>
@@ -24,7 +25,8 @@
   @if (result(); as result) {
     <div class="reveal">
       @if (result.correct) {
-        <h3>Correct!</h3>
+        <h3>Correct! +{{ result.points }} points</h3>
+        <p>It took you {{ result.secondsPlayed }} seconds.</p>
       } @else {
         <h3>Wrong</h3>
       }

@@ -18,11 +18,13 @@ export class Play implements OnInit, OnDestroy {
   protected readonly selectedChoice = signal<string | null>(null);
   // Set during guess,
   protected readonly result = signal<GuessResult | null>(null);
+  protected readonly score = signal(0);
 
   ngOnInit() {
     this.api.getRound(this.id()).subscribe({
       next: (round) => {
         this.round.set(round);
+        this.score.set(round.score);
         this.audio.src = round.preview;
         this.playAudio();
       },
@@ -58,6 +60,7 @@ export class Play implements OnInit, OnDestroy {
     this.api.sendGuess(this.id(), round.roundNumber, choice, this.audio.currentTime).subscribe({
       next: (result) => {
         this.result.set(result);
+        this.score.set(result.score);
       },
       error: () => {
         this.errorMessage.set('Guess couldn\'t be sent.');
