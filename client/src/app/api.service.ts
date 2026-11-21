@@ -36,6 +36,11 @@ export interface GuessResult {
   song: Song;
 }
 
+export interface NextRound {
+  finished: boolean;
+  roundNumber: number;
+}
+
 
 // The singular api service
 
@@ -61,5 +66,9 @@ export class ApiService {
       choice,
       secondsPlayed,
     });
+  }
+
+  nextRound(gameId: string, roundNumber: number): Observable<NextRound> {
+    return this.http.post<NextRound>(`/api/games/${gameId}/next`, { roundNumber });
   }
 }
