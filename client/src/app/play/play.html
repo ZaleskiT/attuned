@@ -8,12 +8,16 @@
     <button type="button" (click)="playAudio()">Play song</button>
   }
 
+  @if (countdown() !== null) {
+    <p>The clip is over! Time left to answer: {{ countdown() }}</p>
+  }
+
   <div class="choices">
     @for (choice of round.choices; track choice) {
       <button
         type="button"
         [class.selected]="choice === selectedChoice()"
-        [disabled]="selectedChoice() !== null"
+        [disabled]="answered()"
         (click)="guess(choice)"
       >
         {{ choice }}
@@ -21,12 +25,17 @@
     }
   </div>
 
-  
+  @if (!answered()) {
+    <button type="button" (click)="skip()">Skip</button>
+  }
+
   @if (result(); as result) {
     <div class="reveal">
       @if (result.correct) {
         <h3>Correct! +{{ result.points }} points</h3>
         <p>It took you {{ result.secondsPlayed }} seconds.</p>
+      } @else if (selectedChoice() === null) {
+        <h3>No answer</h3>
       } @else {
         <h3>Wrong</h3>
       }
@@ -38,6 +47,16 @@
         {{ result.song.album }}
       </p>
       <a [href]="result.song.link" target="_blank" rel="noopener">Listen on Deezer</a>
+
+      <p>
+        <button type="button" (click)="next()">
+          @if (round.roundNumber === round.totalRounds) {
+            See results
+          } @else {
+            Next round
+          }
+        </button>
+      </p>
     </div>
   }
 } @else {

@@ -194,6 +194,7 @@ app.post('/api/games', async (req, res) => {
     roundStartTimes: [],
     currentRound: 1,
     score: 0,
+    finished: false,
   };
 
   games.set(game.id, game);
@@ -208,6 +209,11 @@ app.get('/api/games/:id/round', (req, res) => {
   if (!game) {
     return res.status(404).json({ error: 'Game not found' });
   }
+
+  if (game.finished) {
+    return res.status(400).json({ error: 'Game is finished' });
+  }
+
   const index = game.currentRound - 1;
 
   // When the round is created, record the current time to compare to the relative answer time
@@ -231,6 +237,10 @@ app.post('/api/games/:id/guess', (req, res) => {
     return res.status(404).json({ error: 'Game not exist' });
   }
 
+  if (game.finished) {
+    return res.status(400).json({ error: 'This game has finished already' });
+  }
+
   const roundNumber = req.body?.roundNumber;
   const choice = req.body?.choice;
   const index = game.currentRound - 1;
@@ -240,7 +250,7 @@ app.post('/api/games/:id/guess', (req, res) => {
     return res.status(400).json({ error: 'Wrong round number' });
   }
 
-  if (!game.choices[index].includes(choice)) {
+  if (choice !== null && !game.choices[index].includes(choice)) {
     return res.status(400).json({ error: 'Choice must be one of the options' });
   }
 
@@ -276,6 +286,30 @@ app.post('/api/games/:id/guess', (req, res) => {
       link: song.link,
     },
   });
+});
+
+app.post('/api/games/:id/next', (req, res) => {
+  const game = games.get(req.params.id);
+
+  if (!game) {
+    return res.status(404).json({ error: 'Game not found!' });
+  }
+
+  if (game.finished) {
+    return res.status(400).json({ error: 'This game is finished.' });
+  }
+
+  if (req.body?.roundNumber !== game.currentRound) {
+    return res.status(400).json({ error: 'Wrong round number' });
+  }
+
+  if (game.currentRound === TOTAL_ROUNDS) {
+    game.finished = true;
+  } else {
+    game.currentRound += 1;
+  }
+
+  res.json({ finished: game.finished, roundNumber: game.currentRound });
 });
 
 app.listen(PORT, () => {

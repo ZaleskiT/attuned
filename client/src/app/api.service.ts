@@ -60,7 +60,7 @@ export class ApiService {
     return this.http.get<Round>(`/api/games/${gameId}/round`);
   }
 
-  sendGuess(gameId: string, roundNumber: number, choice: string, secondsPlayed: number): Observable<GuessResult> {
+  sendGuess(gameId: string, roundNumber: number, choice: string | null, secondsPlayed: number): Observable<GuessResult> {
     return this.http.post<GuessResult>(`/api/games/${gameId}/guess`, {
       roundNumber,
       choice,
