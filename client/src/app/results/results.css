@@ -1,0 +1,23 @@
+.score {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.songs li {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.correct {
+  color: green;
+}
+
+.wrong,
+.error {
+  color: red;
+}
+
+.credit {
+  color: grey;
+}

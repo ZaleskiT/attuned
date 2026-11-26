@@ -41,6 +41,27 @@ export interface NextRound {
   roundNumber: number;
 }
 
+export interface SongResult {
+  roundNumber: number;
+  title: string;
+  artist: string;
+  cover: string;
+  link: string;
+  choice: string | null;
+  correct: boolean;
+  points: number;
+}
+
+export interface GameResults {
+  genreId: number;
+  genreName: string;
+  totalRounds: number;
+  score: number;
+  correctCount: number;
+  accuracy: number;
+  songs: SongResult[];
+}
+
 
 // The singular api service
 
@@ -70,5 +91,9 @@ export class ApiService {
 
   nextRound(gameId: string, roundNumber: number): Observable<NextRound> {
     return this.http.post<NextRound>(`/api/games/${gameId}/next`, { roundNumber });
+  }
+
+  getResults(gameId: string): Observable<GameResults> {
+    return this.http.get<GameResults>(`/api/games/${gameId}/results`);
   }
 }

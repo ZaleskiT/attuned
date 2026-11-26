@@ -312,6 +312,46 @@ app.post('/api/games/:id/next', (req, res) => {
   res.json({ finished: game.finished, roundNumber: game.currentRound });
 });
 
+app.get('/api/games/:id/results', (req, res) => {
+  const game = games.get(req.params.id);
+
+  if (!game) {
+    return res.status(404).json({ error: 'Couldn\'t find the game' });
+  }
+
+  if (!game.finished) {
+    return res.status(400).json({ error: 'This game is not finished yet...' });
+  }
+
+
+  const songs = game.songs.map((song, index) => {
+    const answer = game.answers[index];
+    return {
+      roundNumber: index + 1,
+      title: song.title,
+      artist: song.artist,
+      cover: song.cover,
+      link: song.link,
+      choice: answer ? answer.choice : null,
+      correct: answer ? answer.correct : false,
+      points: answer ? answer.points : 0,
+    };
+  });
+
+  const correctCount = songs.filter((song) => song.correct).length;
+
+  res.json({
+    genreId: game.genreId,
+    genreName: GENRES.find((g) => g.id === game.genreId).name,
+    totalRounds: TOTAL_ROUNDS,
+    score: game.score,
+    correctCount,
+    accuracy: Math.round((correctCount / TOTAL_ROUNDS) * 100),
+    songs,
+  });
+  
+});
+
 app.listen(PORT, () => {
   console.log(`Listening: http://localhost:${PORT}`);
 });

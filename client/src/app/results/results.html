@@ -1,3 +1,62 @@
 <h2>Results</h2>
-<p>Game id: {{ id() }}</p>
-<p>Results placeholder. Id should display above.</p>
+
+@if (errorMessage()) {
+  <p class="error">{{ errorMessage() }}</p>
+  <a routerLink="/">Back to home</a>
+} @else if (results(); as results) {
+
+  <p>Genre: {{ results.genreName }}</p>
+
+  <p class="score">{{ results.score }} points</p>
+  
+  <p>
+    Correct: {{ results.correctCount }} / {{ results.totalRounds }}
+    ({{ results.accuracy }}%)
+  </p>
+
+  <p>
+    @if (results.accuracy == 100){
+      A perfect score!
+    }
+  </p>
+  
+  <ol class="songs">
+    @for (song of results.songs; track song.roundNumber) {
+      <li>
+        <img [src]="song.cover" alt=""/>
+        <div>
+          <a [href]="song.link" target="_blank" rel="noopener">
+            <strong>{{ song.title }}</strong>
+          </a>
+          <br />
+          {{ song.artist }}
+          <br />
+          @if (song.correct) {
+            <span class="correct">Correct, +{{ song.points }}</span>
+          } @else if (song.choice === null) {
+            <span class="wrong">No answer</span>
+          } @else {
+            <span class="wrong">You guessed: {{ song.choice }}</span>
+          }
+        </div>
+      </li>
+    }
+  </ol>
+
+  <p>
+    <button type="button" [disabled]="starting()" (click)="playAgain()">
+      @if (starting()) {
+        Loading...
+      } @else {
+        Play Again!
+      }
+    </button>
+    <button type="button" routerLink="/">Home</button>
+  </p>
+
+  <p class="credit">
+    All music sources from <a href="https://www.deezer.com" target="_blank" rel="noopener">Deezer</a>.
+  </p>
+} @else {
+  <p>Loading results...</p>
+}
