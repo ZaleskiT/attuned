@@ -19,11 +19,11 @@
       A perfect score!
     }
   </p>
-  
+
   <ol class="songs">
     @for (song of results.songs; track song.roundNumber) {
       <li>
-        <img [src]="song.cover" alt=""/>
+        <img [src]="song.cover" alt="" width="56" height="56" />
         <div>
           <a [href]="song.link" target="_blank" rel="noopener">
             <strong>{{ song.title }}</strong>
